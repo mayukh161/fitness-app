@@ -14,8 +14,8 @@ const ActivityForm = ({ onActivitesAdded }) => {
 
     const handleSubmit = async (e) => {
         e.preventDefault();
-        
-        if (!activity.duration || activity.caloriesBurned) {
+
+        if (!activity.duration || !activity.caloriesBurned) {
             alert("Please fill in all required fields.");
             return;
         }
