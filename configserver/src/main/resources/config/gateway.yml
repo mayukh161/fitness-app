@@ -1,0 +1,32 @@
+spring:
+  application:
+    name: gateway
+  cloud:
+    inetutils:
+      preferred-networks:
+        - 127.0.0
+  security:
+    oauth2:
+      resourceserver:
+        jwt:
+          jwk-set-uri: http://localhost:8181/realms/fitness-oauth2/protocol/openid-connect/certs
+
+server:
+  port: 8080
+
+eureka:
+  client:
+    service-url:
+      defaultZone: http://localhost:8761/eureka/
+  instance:
+    prefer-ip-address: true
+    ip-address: 127.0.0.1
+    hostname: 127.0.0.1
+
+keycloak:
+  admin:
+    server-url: http://localhost:8181
+    realm: fitness-oauth2
+    client-id: admin-cli
+    username: ${KEYCLOAK_ADMIN_USERNAME}
+    password: ${KEYCLOAK_ADMIN_PASSWORD}
