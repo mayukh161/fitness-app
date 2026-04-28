@@ -1,6 +1,7 @@
 package org.fitness.activityservice.dto;
 
-import jakarta.validation.constraints.NotBlank;
+
+import jakarta.validation.constraints.NotNull;
 import lombok.Data;
 import org.fitness.activityservice.model.ActivityType;
 
@@ -11,10 +12,10 @@ import java.util.Map;
 public class ActivityRequest {
     private ActivityType type;
 
-    @NotBlank(message = "Duration is required")
+    @NotNull(message = "Duration is required")
     private Integer duration;
 
-    @NotBlank(message = "Calories burned is required")
+    @NotNull(message = "Calories burned is required")
     private Integer caloriesBurned;
 
     private LocalDateTime startTime;
