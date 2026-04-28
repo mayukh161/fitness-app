@@ -1,36 +1,71 @@
 import React, { useEffect, useState } from "react";
 import { useParams } from "react-router";
 import { getActivityDetail, getActivityRecommendation } from "../services/api";
-import { Box, Card, CardContent, Divider, Typography } from "@mui/material";
+import { Alert, Box, Card, CardContent, CircularProgress, Divider, Typography } from "@mui/material";
 
 const ActivityDetail = () => {
     const {id} = useParams();
     const [activity, setActivity] = useState(null);
     const [recommendation, setRecommendation] = useState(null);
+    const [recommendationLoading, setRecommendationLoading] = useState(true);
+    const [recommendationError, setRecommendationError] = useState("");
 
     useEffect(() => {
-        const fetchActivityDetail = async () => {
+        let isMounted = true;
+        let timeoutId = null;
+        let attempts = 0;
+
+        const maxAttempts = 10;
+        const pollInterval = 3000; // 3 seconds
+
+        const fetchRecommendation = async () => {
+            try {
+                const response = await getActivityRecommendation(id);
+                if (!isMounted) return;
+
+                setRecommendation(response.data);
+                setRecommendationLoading(false);
+                setRecommendationError("");
+            } catch (error) {
+                if (!isMounted) return;
+
+                attempts++;
+
+                if (attempts < maxAttempts) {
+                    timeoutId = setTimeout(fetchRecommendation, pollInterval);
+                } else {
+                    console.error("Recommendation is not available yet: ", error);
+                    setRecommendation(null);
+                    setRecommendationLoading(false);
+                    setRecommendationError("Recommendation is still being generated. Please wait.");
+                }
+            }
+        };
+
+        const fetchActivity = async () => {
             try {
                 const activityResponse = await getActivityDetail(id);
+                if (!isMounted) return;
+
                 setActivity(activityResponse.data);
+                setRecommendationLoading(true);
+                setRecommendationError("");
+                fetchRecommendation();
             } catch (error) {
-                console.error("Failed to load activity:", error);
-                return;
+                console.error("Failed to load activity: ", error);
             }
+        };
 
-            try {
-                const recommendationResponse = await getActivityRecommendation(id);
-                setRecommendation(recommendationResponse.data);
-            } catch (error) {
-                console.error("Recommendation is not available yet:", error);
-                setRecommendation(null);
-            }
-        }
+        fetchActivity();
 
-        fetchActivityDetail();
+        return () => {
+            isMounted = false;
+            if (timeoutId) clearTimeout(timeoutId);
+        };
 
     }, [id]);
-
+    
+    
     if (!activity) {
         return <Typography>Loading...</Typography>;
     }
@@ -56,6 +91,21 @@ const ActivityDetail = () => {
                     </Typography>
                 </CardContent>
             </Card>
+
+            {recommendationLoading && (
+                <Card sx={{mb: 2, boxShadow: 3}}>
+                    <CardContent sx={{display: "flex", alignItems: "center", gap: 2}}>
+                        <CircularProgress size={24} />
+                        <Typography>Generating your AI recommendation...</Typography>
+                    </CardContent>
+                </Card>
+            )}
+
+            {!recommendationLoading && recommendationError && (
+                <Alert severity="info" sx={{ mb: 2 }}>
+                    {recommendationError}
+                </Alert>
+            )}
 
             {recommendation && (
                 <Card sx={{boxShadow: 3}}>
